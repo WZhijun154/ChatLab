@@ -10,6 +10,8 @@ import { runAgentStream } from '../ai/agent/index.js'
 import { addMessage } from '../ai/conversations.js'
 import type { ToolContext } from '../ai/tools/types.js'
 import type { AgentStreamChunk } from '../ai/agent/types.js'
+import { BUILTIN_DESENSITIZE_RULES } from '../ai/preprocessor/builtin-rules.js'
+import type { DesensitizeRule } from '../ai/preprocessor/types.js'
 
 const router = Router()
 
@@ -145,6 +147,44 @@ router.post('/abort/:requestId', (req: Request, res: Response) => {
   controller.abort()
   abortControllers.delete(requestId)
   res.json({ success: true })
+})
+
+/**
+ * GET /api/agent/desensitize-rules
+ * Returns built-in desensitize rules filtered by locale.
+ * Query: locale (default: 'en')
+ */
+router.get('/desensitize-rules', (req: Request, res: Response) => {
+  const locale = (req.query.locale as string) || 'en'
+  const rules = BUILTIN_DESENSITIZE_RULES.filter(
+    (r) => !r.locales || r.locales.length === 0 || r.locales.includes(locale)
+  )
+  res.json(rules)
+})
+
+/**
+ * POST /api/agent/merge-desensitize-rules
+ * Merges existing rules with built-in rules for a locale.
+ * Body: { existingRules: DesensitizeRule[], locale: string }
+ */
+router.post('/merge-desensitize-rules', (req: Request, res: Response) => {
+  const { existingRules = [], locale = 'en' } = req.body as {
+    existingRules: DesensitizeRule[]
+    locale: string
+  }
+
+  const builtinForLocale = BUILTIN_DESENSITIZE_RULES.filter(
+    (r) => !r.locales || r.locales.length === 0 || r.locales.includes(locale)
+  )
+
+  // Start with existing rules, add any missing built-in rules
+  const existingIds = new Set(existingRules.map((r) => r.id))
+  const merged = [
+    ...existingRules,
+    ...builtinForLocale.filter((r) => !existingIds.has(r.id)),
+  ]
+
+  res.json(merged)
 })
 
 export default router
