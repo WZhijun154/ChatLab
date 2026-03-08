@@ -2,9 +2,10 @@
 .DS_Store
 
 # Node.js
-node_modules
+node_modules/
 
 # local env files
+.env
 .env.local
 .env.*.local
 
@@ -14,6 +15,13 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 error-log-*.txt
+
+# Security / secrets
+*.key
+*.pem
+*.secret
+*.p12
+*.pfx
 
 # Project
 dist/
@@ -25,6 +33,10 @@ src/auto-imports.d.ts
 src/components.d.ts
 *.tsbuildinfo
 
+# Coverage
+coverage/
+.nyc_output/
+
 # 使用npm作为包管理器
 yarn.lock
 
@@ -35,3 +47,6 @@ yarn.lock
 !.vscode/snippets.code-snippets
 .docs
 
+
+# Workflow progress files
+progress-*.txt
